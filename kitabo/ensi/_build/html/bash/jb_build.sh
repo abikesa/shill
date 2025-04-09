@@ -13,6 +13,9 @@ jb clean .
 # Build the Jupyter Book
 jb build .
 
+# organized noise
+python ../python/plant_flicks.py
+
 # Run the jb_clean script
 bash/jb_clean.sh
 
