@@ -6,7 +6,7 @@ import string
 from datetime import datetime
 
 # Base directory to walk through
-BASE_DIR = 'pretense'  # change if needed
+BASE_DIR = '../../../'  # change if needed
 
 # Graffiti generator
 def random_graffiti():
