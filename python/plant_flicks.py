@@ -3,13 +3,9 @@
 plant_flicks.py 🌱
 
 Performs the flick ritual:
-- Walks the directory tree from BASE_DIR.
-- Either appends to an existing dotfile or creates a new one.
-- Commits each flick individually using Git.
-- Logs everything to stdout.
-
-Usage:
-    python python/plant_flicks.py
+- Walks the Git-rooted directory tree starting from shill.
+- Appends symbolic graffiti to existing dotfiles or creates new ones.
+- Commits each flick individually with a unique message.
 """
 
 import os
@@ -18,8 +14,8 @@ import string
 from datetime import datetime
 import subprocess
 
-# Ritual locus: can be adjusted as needed
-BASE_DIR = "../../../"
+# Dynamically resolve Git root from script location
+BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../.."))
 
 def random_tag():
     return ''.join(random.choices(string.ascii_letters + string.digits, k=4))
