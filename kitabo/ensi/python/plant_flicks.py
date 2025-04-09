@@ -2,9 +2,8 @@
 """
 plant_flicks.py 🌱
 
-This script performs the flick ritual: it walks through a directory tree,
-drops an entropy-bearing dotfile in each folder, commits each one individually
-(with a unique message), and logs the entire ritual to stdout.
+Walks the directory tree from a base, drops graffiti-bearing dotfiles,
+and commits each one independently, rooted at the top-level Git repo.
 
 Usage:
     python python/plant_flicks.py
@@ -16,36 +15,51 @@ import string
 from datetime import datetime
 import subprocess
 
-# Ritual locus
-BASE_DIR = "../../../"  # Adjust if needed
+# Dynamically locate Git root
+def find_git_root(start_path="."):
+    path = os.path.abspath(start_path)
+    while path != "/":
+        if os.path.isdir(os.path.join(path, ".git")):
+            return path
+        path = os.path.dirname(path)
+    raise RuntimeError("❌ Git root not found.")
 
+# Random graffiti tag
 def random_tag():
     return ''.join(random.choices(string.ascii_letters + string.digits, k=4))
 
+# Random dotfile
 def random_filename():
     return f".{''.join(random.choices(string.ascii_lowercase, k=random.randint(4, 8)))}"
 
+# The flick mark
 def generate_graffiti():
     timestamp = datetime.utcnow().strftime('%Y%m%d%H%M%S')
     tag = random_tag()
     return f"# flick {timestamp}-{tag}\n"
 
+# Choose a file to flick (existing or new)
 def get_or_create_flick_path(folder):
-    existing = [f for f in os.listdir(folder) if f.startswith('.') and not f.startswith('..')]
-    flicks = [f for f in existing if os.path.isfile(os.path.join(folder, f))]
-    if flicks:
-        return os.path.join(folder, random.choice(flicks))  # Append to existing
+    hidden = [f for f in os.listdir(folder) if f.startswith('.') and not f.startswith('..')]
+    dotfiles = [f for f in hidden if os.path.isfile(os.path.join(folder, f))]
+    if dotfiles:
+        return os.path.join(folder, random.choice(dotfiles))
     else:
-        return os.path.join(folder, random_filename())      # Create new
+        return os.path.join(folder, random_filename())
 
-def git_commit(file_path, message):
+# Add and commit from the top-level git root
+def git_commit(repo_root, file_path, message):
     try:
-        subprocess.run(["git", "add", file_path], check=True)
-        subprocess.run(["git", "commit", "-m", message], check=True)
+        subprocess.run(["git", "-C", repo_root, "add", file_path], check=True)
+        subprocess.run(["git", "-C", repo_root, "commit", "-m", message], check=True)
     except subprocess.CalledProcessError as e:
         print(f"❌ Git commit failed for {file_path}: {e}")
 
+# Main ritual
 def plant_flicks(base_dir):
+    repo_root = find_git_root(base_dir)
+    print(f"🌲 Git root found at: {repo_root}\n")
+
     flicked = 0
     for root, dirs, _ in os.walk(base_dir):
         try:
@@ -53,14 +67,14 @@ def plant_flicks(base_dir):
             with open(flick_path, 'a') as f:
                 graffiti = generate_graffiti()
                 f.write(graffiti)
-            rel_path = os.path.relpath(flick_path, start=base_dir)
+            rel_path = os.path.relpath(flick_path, start=repo_root)
             commit_msg = f"🌱 flicked {rel_path}"
-            git_commit(flick_path, commit_msg)
+            git_commit(repo_root, rel_path, commit_msg)
             print(f"✅ {commit_msg}")
             flicked += 1
         except Exception as e:
             print(f"❌ Failed in {root}: {e}")
-    print(f"\n🌿 Ritual complete: {flicked} folders received their entropy.")
+    print(f"\n🌿 Ritual complete: {flicked} folders flicked.")
 
 if __name__ == "__main__":
-    plant_flicks(BASE_DIR)
+    plant_flicks("../../../")
