@@ -16,8 +16,8 @@ jb build .
 # Run the jb_clean script
 bash/jb_clean.sh
 
-# organized noise
-python python/plant_flicks.py
+# Organized noise: bulletproof path to flick ritual
+python "$(dirname "$0")/../python/plant_flicks.py"
 
 # Import the built HTML to the gh-pages branch
 ghp-import -n -p -f _build/html
@@ -25,11 +25,11 @@ ghp-import -n -p -f _build/html
 # Navigate to the root directory of the git repository
 cd ../..
 
-# Stage all changes
-git add .
+# Stage all changes (e.g., new notebooks or structure)
+# git add .
 
-# Commit with the provided commit message
-git commit -m "$commit_message"
+# Commit with the user-defined message
+# git commit -m "$commit_message"
 
-# Optionally push changes to the remote repository (uncomment if needed)
+# Push to remote
 git push

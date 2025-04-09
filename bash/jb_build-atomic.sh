@@ -36,4 +36,4 @@ git commit -m "$commit_message"
 git push
 
 # Step 8: Run flick ritual (separate graffiti & commit per flick)
-python shill/kitabo/ensi/python/plant_flicks.py
+python "$(dirname "$0")/../python/plant_flicks.py"
