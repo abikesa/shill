@@ -1,39 +1,46 @@
 #!/bin/bash
 
-# Prompt for a commit message
-echo "Enter your commit message:"
-read commit_message
+# ──────────────────────────────────────────────────────────────
+# 🌊 0. Prompt the navigator
+read -p "📜 Enter your commit message: " commit_message
 
-# Optional: deactivate virtual env (useful on older setups)
+# ──────────────────────────────────────────────────────────────
+# 🚢 1. Optional: deactivate virtual environment (for legacy setups)
 if [ -f "../../../myenv/bin/deactivate" ]; then
   source ../../../myenv/bin/deactivate
 fi
 
-# Step 1: Clean previous builds
+# ──────────────────────────────────────────────────────────────
+# 🪛 2. Clean and rebuild the Jupyter Book
+echo "🧼 Cleaning Jupyter Book..."
 jb clean .
+bash/bash_clean.sh 2>/dev/null || echo "ℹ️ No extended clean script found."
 
-# Step 2: Build the Jupyter Book
-jb build .
+echo "🏗️ Building Jupyter Book..."
+jb build . || { echo "❌ Jupyter Book build failed. Aborting."; exit 1; }
 
-# Step 3: Run additional cleaning
-bash/jb_clean.sh
+# ──────────────────────────────────────────────────────────────
+# ✂️ 3. Push the built book to gh-pages
+echo "🚀 Deploying to gh-pages..."
+ghp-import -n -p -f _build/html || { echo "❌ ghp-import failed. Aborting."; exit 1; }
 
-# Step 4: Import HTML to gh-pages
-ghp-import -n -p -f _build/html
-if [ $? -ne 0 ]; then
-  echo "❌ ghp-import failed. Aborting flick ritual."
-  exit 1
-fi
+# ──────────────────────────────────────────────────────────────
+# 🦈 4. Return to Git root
+echo "🧭 Returning to Git root..."
+cd "$(git rev-parse --show-toplevel)" || { echo "❌ Git root not found. Exiting."; exit 1; }
 
-# Step 5: Return to Git root (bulletproof)
-cd "$(git rev-parse --show-toplevel)" || exit 1
+# ──────────────────────────────────────────────────────────────
+# 🛟 5. Plant flicks: the graffiti of discernment
+echo "🌿 Planting flicks..."
+python kitabo/ensi/python/plant_flicks.py || echo "⚠️ Flick planting encountered an issue."
 
-# Step 6: Stage and commit main book content
+# ──────────────────────────────────────────────────────────────
+# 🏝️ 6. Commit and push
+echo "🧾 Staging changes..."
 git add .
-git commit -m "$commit_message"
 
-# Step 7: Push main content
-git push
+echo "✍️ Committing..."
+git commit -m "$commit_message" || echo "⚠️ Nothing to commit."
 
-# Step 8: Run flick ritual from canonical path
-python "$(git rev-parse --show-toplevel)/kitabo/ensi/python/plant_flicks.py"
+echo "⬆️ Pushing to origin/main..."
+git push origin main || echo "❌ Push failed."
