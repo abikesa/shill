@@ -42,4 +42,3 @@ def plant_flicks(base_dir):
 
 if __name__ == '__main__':
     plant_flicks(BASE_DIR)
-``
