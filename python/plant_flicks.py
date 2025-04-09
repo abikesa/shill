@@ -6,7 +6,8 @@ import string
 import subprocess
 from datetime import datetime
 
-BASE_DIR = '../../..'  # Adjust as needed
+# Get absolute path to the repo root (shill/)
+REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../.."))
 
 def random_graffiti():
     now = datetime.utcnow().strftime('%Y%m%d%H%M%S')
@@ -25,12 +26,13 @@ def flick_file_path(folder):
     else:
         return os.path.join(folder, random_filename())
 
-def git_commit(filepath, message):
+def git_commit(abs_path, message):
+    rel_path = os.path.relpath(abs_path, REPO_ROOT)
     try:
-        subprocess.run(["git", "add", filepath], check=True)
-        subprocess.run(["git", "commit", "-m", message], check=True)
+        subprocess.run(["git", "-C", REPO_ROOT, "add", rel_path], check=True)
+        subprocess.run(["git", "-C", REPO_ROOT, "commit", "-m", message], check=True)
     except subprocess.CalledProcessError as e:
-        print(f"❌ Git error: {e}")
+        print(f"❌ Git commit failed for {rel_path}: {e}")
 
 def plant_flicks(base_dir):
     count = 0
@@ -41,12 +43,11 @@ def plant_flicks(base_dir):
                 graffiti = random_graffiti()
                 f.write(graffiti)
 
-            rel_path = os.path.relpath(flick_path, base_dir)
-            git_commit(flick_path, f"Flicked {rel_path}: {graffiti.strip()}")
+            git_commit(flick_path, f"flick: {os.path.relpath(flick_path, REPO_ROOT)} — {graffiti.strip()}")
             count += 1
         except Exception as e:
             print(f"❌ Failed in {root}: {e}")
     print(f"✅ Flicked and committed {count} folders.")
 
 if __name__ == '__main__':
-    plant_flicks(BASE_DIR)
+    plant_flicks(REPO_ROOT)
