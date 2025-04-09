@@ -25,15 +25,15 @@ if [ $? -ne 0 ]; then
   exit 1
 fi
 
-# Step 5: Return to Git root
-cd ../..
+# Step 5: Return to Git root (bulletproof)
+cd "$(git rev-parse --show-toplevel)" || exit 1
 
-# Step 6: Stage and commit main content
+# Step 6: Stage and commit main book content
 git add .
 git commit -m "$commit_message"
 
-# Step 7: Push core content
+# Step 7: Push main content
 git push
 
-# Step 8: Run flick ritual (separate graffiti & commit per flick)
-python "$(dirname "$0")/../python/plant_flicks.py"
+# Step 8: Run flick ritual from canonical path
+python "$(git rev-parse --show-toplevel)/kitabo/ensi/python/plant_flicks.py"
