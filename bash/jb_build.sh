@@ -17,7 +17,7 @@ jb build .
 bash/jb_clean.sh
 
 # Organized noise: bulletproof path to flick ritual
-python "$(dirname "$0")/../python/plant_flicks.py"
+python "$(dirname "$0")/../../python/plant_flicks.py"
 
 # Import the built HTML to the gh-pages branch
 ghp-import -n -p -f _build/html
