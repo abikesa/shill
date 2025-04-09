@@ -1,80 +1,108 @@
 #!/usr/bin/env python3
+"""
+plant_flicks.py 🌱
+
+A script to perform the flick ritual: dropping entropy-bearing dotfiles into each directory 
+within a given subtree, symbolically marking presence, randomness, and change. 
+Each file is added to Git using the correct repository root.
+
+This is not just utility—it's epistemology in motion.
+
+Usage:
+    python plant_flicks.py
+"""
 
 import os
+import subprocess
 import random
 import string
-import subprocess
-from datetime import datetime
 
-# 🤓 You are calling this from: shill/kitabo/ensi/
-# So the Git root is: ../../..
-REPO_ROOT = os.path.abspath(os.path.join(os.getcwd(), "../../.."))
+def find_git_root(start_dir):
+    """
+    Recursively traverse upward from the start_dir to locate the Git root.
+    
+    Parameters:
+        start_dir (str): The directory from which to start the search.
 
-EXCLUDE_DIRS = {
-    '.git', 'myenv', '__pycache__', '.venv', 'env', 'site-packages', 'node_modules', '.mypy_cache'
-}
+    Returns:
+        str: Absolute path to the root of the Git repository.
 
-def random_graffiti():
-    now = datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')
-    tag = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
-    phrase = random.choice([
-        "echo from entropy",
-        "mark of meaninglessness",
-        "signed by the void",
-        "ripple in the repo",
-        "trace of recursion",
-        "👁️ whisper from the abyss",
-        "📜 stamped and forgotten",
-        "🌀 data with no witness"
-    ])
-    return f"# flick {now} — {tag} — {phrase}\n"
+    Raises:
+        RuntimeError: If no .git directory is found.
+    """
+    current = os.path.abspath(start_dir)
+    while current != os.path.dirname(current):
+        if os.path.isdir(os.path.join(current, ".git")):
+            return current
+        current = os.path.dirname(current)
+    raise RuntimeError("❌ No .git directory found above this script.")
 
-def random_filename():
-    return "." + ''.join(random.choices(string.ascii_lowercase, k=random.randint(5, 9)))
+def random_dotfile_name():
+    """
+    Generates a pseudo-random dotfile name using lowercase letters.
 
-def flick_file_path(folder):
+    Returns:
+        str: A string like '.xajwqptz'
+    """
+    name = ''.join(random.choices(string.ascii_lowercase, k=8))
+    return f".{name}"
+
+def flick_entropy_into_folders(base_dir, repo_root):
+    """
+    Walks through all directories starting from base_dir,
+    creates a hidden entropy dotfile in each folder,
+    and adds it to Git using -C repo_root.
+
+    Parameters:
+        base_dir (str): The base directory to walk through.
+        repo_root (str): The root directory of the Git repository.
+
+    Returns:
+        int: Number of entropy files successfully added.
+    """
+    entropy_count = 0
+
+    for root, dirs, _ in os.walk(base_dir):
+        for d in dirs:
+            dir_path = os.path.join(root, d)
+            dotfile = os.path.join(dir_path, random_dotfile_name())
+
+            try:
+                # Write the entropy
+                with open(dotfile, "w") as f:
+                    f.write("entropy\n")
+
+                # Add using Git root
+                subprocess.run(["git", "-C", repo_root, "add", dotfile], check=True)
+                entropy_count += 1
+
+            except subprocess.CalledProcessError as e:
+                print(f"❌ Git error on {dotfile}: {e}")
+            except Exception as e:
+                print(f"⚠️ Unexpected error in {dir_path}: {e}")
+
+    return entropy_count
+
+def main():
+    """
+    Entry point for the flick ritual.
+    """
     try:
-        flicks = [f for f in os.listdir(folder)
-                  if f.startswith('.') and not f.startswith('..')
-                  and os.path.isfile(os.path.join(folder, f))]
-        if flicks:
-            return os.path.join(folder, random.choice(flicks))
-        else:
-            return os.path.join(folder, random_filename())
-    except Exception:
-        return os.path.join(folder, random_filename())
+        # Step 1: Find Git root
+        repo_root = find_git_root(os.getcwd())
 
-def git_commit(abs_path, graffiti):
-    rel_path = os.path.relpath(abs_path, REPO_ROOT)
-    msg = f"🌱 flicked `{rel_path}` — {graffiti.strip()}"
-    try:
-        subprocess.run(["git", "-C", REPO_ROOT, "add", rel_path], check=True)
-        subprocess.run(["git", "-C", REPO_ROOT, "commit", "-m", msg], check=True)
-    except subprocess.CalledProcessError as e:
-        print(f"❌ Git error on {rel_path}: {e}")
+        # Step 2: Define target path (ritual locus)
+        target_dir = os.path.join(repo_root, "shill", "kitabo", "ensi")
 
-def is_valid_folder(path):
-    for part in path.split(os.sep):
-        if part in EXCLUDE_DIRS:
-            return False
-    return True
+        if not os.path.exists(target_dir):
+            raise FileNotFoundError(f"❌ Target directory does not exist: {target_dir}")
 
-def plant_flicks(base_dir):
-    print(f"🌿 Initiating flick ritual from {base_dir}")
-    count = 0
-    for root, dirs, files in os.walk(base_dir):
-        if not is_valid_folder(root):
-            continue
-        try:
-            flick_path = flick_file_path(root)
-            graffiti = random_graffiti()
-            with open(flick_path, 'a') as f:
-                f.write(graffiti)
-            git_commit(flick_path, graffiti)
-            count += 1
-        except Exception as e:
-            print(f"⚠️  Failed to flick {root}: {e}")
-    print(f"✅ Flick ritual complete. {count} folders received entropy.")
+        # Step 3: Flick
+        total = flick_entropy_into_folders(target_dir, repo_root)
+        print(f"✅ Flick ritual complete. {total} folders received entropy.")
 
-if __name__ == '__main__':
-    plant_flicks(REPO_ROOT)
+    except Exception as e:
+        print(f"🔥 Ritual failed: {e}")
+
+if __name__ == "__main__":
+    main()
