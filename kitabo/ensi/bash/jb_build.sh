@@ -5,7 +5,7 @@ echo "Enter your commit message:"
 read commit_message
 
 # Wasn't necessarily until 12/2024 upgrade
-source ../../../../myenv/bin/deactivate
+source ../../../myenv/bin/deactivate
 
 # Clean the Jupyter Book
 jb clean .
@@ -17,7 +17,7 @@ jb build .
 bash/jb_clean.sh
 
 # organized noise
-python ../python/plant_flicks.py
+python python/plant_flicks.py
 
 # Import the built HTML to the gh-pages branch
 ghp-import -n -p -f _build/html
